@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriceTracker</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 PriceTracker</h1>
+        
+        
+        <div style="text-align: center; color: green; font-weight: bold; margin: 10px 0;">
+            🚀 PriceTracker v2.0 с Яндекс.Маркет
+        </div>
+        
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="Введите товар для поиска ИЛИ URL Яндекс.Маркет...">
+           <button onclick="searchProducts(document.getElementById('searchInput').value)">Найти товар</button>
+        </div>
+
+        
+        <div class="search-hint" style="text-align: center; margin: 10px 0; color: #666; font-size: 14px;">
+            💡 Пример URL Яндекс.Маркет: https://market.yandex.ru/card/smartfon-apple-iphone-15-128-gb-dual-nano-sim--esim-black-chernyy/4704078248
+        </div>
+
+        <div id="results" class="results"></div>
+
+        <div id="searchResults" class="search-results"></div>
+        
+        <div class="tracked-section">
+            <h2>📊 Отслеживаемые товары</h2>
+            <div id="trackedProducts"></div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
