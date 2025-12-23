@@ -10,7 +10,10 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     DATABASE_URL = "postgresql://postgres:zaLAvOAHRQqsqkBYuBjfXIkkqBnWJRXU@maglev.proxy.rlwy.net:23602/railway"
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False}  # Обязательно для SQLite в FastAPI
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
