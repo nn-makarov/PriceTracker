@@ -10,29 +10,15 @@
     <div class="container">
         <h1>🔍 PriceTracker</h1>
 
-        <div style="text-align: center; color: green; font-weight: bold; margin: 10px 0;">
-            🚀 PriceTracker v2.0 с Яндекс.Маркет
+        <div style="text-align: center; color: #666; margin: 10px 0 20px;">
+            Отслеживание цен на товары
         </div>
 
-        <div class="search-section">
-            <input type="text" id="searchInput" placeholder="Введите товар для поиска ИЛИ URL Яндекс.Маркет...">
-           <button onclick="searchProducts(document.getElementById('searchInput').value)">Найти товар</button>
-        </div>
-
-        <div class="search-hint" style="text-align: center; margin: 10px 0; color: #666; font-size: 14px;">
-            💡 Пример URL Яндекс.Маркет: https://market.yandex.ru/card/smartfon-apple-iphone-15-128-gb-dual-nano-sim--esim-black-chernyy/4704078248
-        </div>
-
-        <div id="results" class="results"></div>
-
-        <div id="searchResults" class="search-results"></div>
-
-        <!-- Ручное добавление: Маркет часто отдаёт капчу вместо цены,
-             поэтому цену можно вписать вручную, посмотрев на сайте. -->
+        <!-- Добавление товара: ссылка, название и цена вводятся вручную. -->
         <div class="manual-section" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 20px 0; background: #fafafa;">
-            <h3 style="margin: 0 0 5px 0;">✍️ Добавить вручную</h3>
+            <h3 style="margin: 0 0 5px 0;">➕ Добавить товар</h3>
             <p style="margin: 0 0 12px 0; color: #666; font-size: 13px;">
-                Если цена не подтянулась автоматически — впишите её сами.
+                Вставьте ссылку на товар, название и текущую цену — сервис будет вести историю изменений.
             </p>
             <input type="text" id="manualUrl" placeholder="Ссылка на товар"
                    style="width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 8px;">
