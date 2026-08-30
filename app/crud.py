@@ -37,7 +37,7 @@ def create_product(db: Session, product: schemas.ProductCreate):
 def get_price_history(db: Session, product_id: int, limit: int = 30):
     return db.query(PriceHistory).filter(
         PriceHistory.product_id == product_id
-    ).order_by(PriceHistory.created_at.desc()).limit(limit).all()
+    ).order_by(PriceHistory.id.asc()).limit(limit).all()
 
 
 def delete_product(db: Session, product_id: int) -> bool:
