@@ -75,6 +75,26 @@ async function trackProduct(productId, title, price, url, source) {
     }
 }
 
+
+// Удаление товара со всей историей цен, с подтверждением.
+async function deleteProduct(id, title) {
+    if (!confirm(`Удалить «${title}» вместе с историей цен?`)) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            showNotification('Товар удалён', 'success');
+            loadTrackedProducts();
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Не удалось удалить', 'error');
+        }
+    } catch (error) {
+        showNotification('Ошибка соединения', 'error');
+    }
+}
+
 async function loadTrackedProducts() {
     try {
         const response = await fetch('/api/tracked-products');
@@ -123,6 +143,10 @@ function displayTrackedProducts(products) {
             <p style="margin: 5px 0; color: #888; font-size: 12px;">
                 ID: ${product.id}
             </p>
+            <button onclick="deleteProduct(${product.id}, '${product.title.replace(/'/g, "\\'")}')"
+                    style="background: #d9534f; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                🗑 Удалить
+            </button>
         </div>
     `).join('');
     

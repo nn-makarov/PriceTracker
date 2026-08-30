@@ -63,6 +63,14 @@ def get_tracked_products(db: Session = Depends(get_db)):
     return crud.get_products(db)
 
 
+@app.delete("/api/products/{product_id}", status_code=204)
+def delete_product(product_id: int, db: Session = Depends(get_db)):
+    """Удалить товар вместе с историей цен."""
+    if not crud.delete_product(db, product_id):
+        raise HTTPException(status_code=404, detail="Товар не найден")
+    logger.info(f"Товар удалён: ID {product_id}")
+
+
 @app.get("/api/stats/{product_id}")
 def get_product_stats(product_id: int, db: Session = Depends(get_db)):
     """История и статистика цены по товару."""

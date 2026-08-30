@@ -38,3 +38,16 @@ def get_price_history(db: Session, product_id: int, limit: int = 30):
     return db.query(PriceHistory).filter(
         PriceHistory.product_id == product_id
     ).order_by(PriceHistory.created_at.desc()).limit(limit).all()
+
+
+def delete_product(db: Session, product_id: int) -> bool:
+    """Удаляет товар вместе со всей историей цен. True, если удалили."""
+    product = get_product(db, product_id)
+    if not product:
+        return False
+    # Сначала историю, потом сам товар — на случай, если внешний ключ
+    # не настроен на каскад (в SQLite по умолчанию он не срабатывает).
+    db.query(PriceHistory).filter(PriceHistory.product_id == product_id).delete()
+    db.delete(product)
+    db.commit()
+    return True
