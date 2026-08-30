@@ -1,12 +1,15 @@
 import aiohttp
 import re
+import logging
+
+logger = logging.getLogger("pricetracker")
 
 async def parse_yamarket(product_url: str):
     """
     Парсер Яндекс.Маркет
     """
     try:
-        print(f"🔍 Реальный парсинг Яндекс.Маркет: {product_url}")
+        logger.info("🔍 Реальный парсинг Яндекс.Маркет: {product_url}")
         
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -16,9 +19,10 @@ async def parse_yamarket(product_url: str):
         
         clean_url = product_url.split('?')[0]
         
-        async with aiohttp.ClientSession() as session:
-            async with session.get(clean_url, headers=headers, timeout=10) as response:
-                print(f"📡 Статус: {response.status}")
+        timeout = aiohttp.ClientTimeout(total=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(clean_url, headers=headers) as response:
+                logger.info("📡 Статус: {response.status}")
                 
                 if response.status == 200:
                     html = await response.text()
@@ -35,10 +39,10 @@ async def parse_yamarket(product_url: str):
                             price = int(price_text)
                         except (ValueError, AttributeError):
                             price = 0
-                            print("⚠️ Не удалось преобразовать цену в число")
+                            logger.info("⚠️ Не удалось преобразовать цену в число")
                     else:
                         price = 0
-                        print("⚠️ Цена не найдена в HTML")
+                        logger.info("⚠️ Цена не найдена в HTML")
                     
                     title_match = re.search(r'<h1[^>]*data-auto="title"[^>]*>(.*?)</h1>', html)
                     if not title_match:
@@ -75,7 +79,7 @@ async def parse_yamarket(product_url: str):
                     return {'success': False, 'error': f'Ошибка {response.status}'}
                 
     except Exception as e:
-        print(f"❌ Ошибка: {e}")
+        logger.info("❌ Ошибка: {e}")
         return {'success': False, 'error': str(e)}
 
 def generate_title_from_url(url: str):

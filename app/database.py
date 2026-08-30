@@ -1,21 +1,23 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
 
-if not DATABASE_URL:
-    DATABASE_URL = "postgresql://postgres:zaLAvOAHRQqsqkBYuBjfXIkkqBnWJRXU@maglev.proxy.rlwy.net:23602/railway"
+# По умолчанию — файловый SQLite рядом с приложением. Другую базу можно
+# задать переменной DATABASE_URL, но никаких паролей в коде: если нужен
+# внешний PostgreSQL, он приходит только из окружения.
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/pricetracker.db")
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}  # Обязательно для SQLite в FastAPI
-)
+# check_same_thread нужен только SQLite. Для остальных драйверов этот
+# аргумент нелегален и уронил бы запуск, поэтому добавляем его выборочно.
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
 
 def get_db():
     db = SessionLocal()

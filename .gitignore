@@ -2,28 +2,24 @@
 __pycache__/
 *.pyc
 *.pyo
-*.pyd
-.Python
 venv/
 env/
+.venv/
 
-# Environment variables
+# Секреты
 .env
-.env.local
 
-# Database 
-*.sqlite3
+# База
 *.db
+*.sqlite3
+data/
 
-# IDE
+# IDE / ОС
 .vscode/
 .idea/
 *.swp
-*.swo
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Logs
+# Логи
 *.log

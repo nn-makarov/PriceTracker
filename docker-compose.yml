@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      # Наружу не публикуем — доступ только с самой машины, через nginx.
+      - "127.0.0.1:${APP_PORT:-8001}:8001"
+    volumes:
+      # База переживает пересборку и перезапуск контейнера.
+      - pricetracker_data:/app/data
+
+volumes:
+  pricetracker_data:
