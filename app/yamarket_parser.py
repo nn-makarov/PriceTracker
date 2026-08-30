@@ -4,85 +4,82 @@ import logging
 
 logger = logging.getLogger("pricetracker")
 
+
 async def parse_yamarket(product_url: str):
-    """
-    Парсер Яндекс.Маркет
-    """
+    """Разбор страницы товара Яндекс.Маркета: достаёт название и цену."""
     try:
-        logger.info("🔍 Реальный парсинг Яндекс.Маркет: {product_url}")
-        
+        logger.info(f"Парсинг Яндекс.Маркет: {product_url}")
+
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
         }
-        
-        clean_url = product_url.split('?')[0]
-        
+
+        clean_url = product_url.split("?")[0]
         timeout = aiohttp.ClientTimeout(total=10)
+
         async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.get(clean_url, headers=headers) as response:
-                logger.info("📡 Статус: {response.status}")
-                
-                if response.status == 200:
-                    html = await response.text()
-                    
-                    price_match = re.search(r'"price":\s*"?(\d+)"?', html)
-                    if not price_match:
-                        price_match = re.search(r'data-auto="price-value">\s*([\d\s]+)\s*₽', html)
-                    if not price_match:
-                        price_match = re.search(r'"formattedPrice":"([\d\s]+)\s*₽"', html)
+                logger.info(f"Статус ответа Яндекс.Маркета: {response.status}")
 
-                    if price_match:
-                        try:
-                            price_text = price_match.group(1).replace(' ', '')
-                            price = int(price_text)
-                        except (ValueError, AttributeError):
-                            price = 0
-                            logger.info("⚠️ Не удалось преобразовать цену в число")
-                    else:
-                        price = 0
-                        logger.info("⚠️ Цена не найдена в HTML")
-                    
-                    title_match = re.search(r'<h1[^>]*data-auto="title"[^>]*>(.*?)</h1>', html)
-                    if not title_match:
-                        title_match = re.search(r'<title[^>]*>(.*?) - Яндекс Маркет</title>', html)
-                    if not title_match:
-                        title_match = re.search(r'<meta[^>]*property="og:title"[^>]*content="([^"]+)"', html)
+                if response.status != 200:
+                    return {"success": False, "error": f"Маркет ответил кодом {response.status}"}
 
-                    if title_match:
-                        title = title_match.group(1).strip()
-                        
-                        title = re.sub(r'<[^>]+>', '', title)
-                        
-                        if len(title) < 5 or '@' in title or 'marketfront' in title:
-                            title = generate_title_from_url(clean_url)
-                    else:
-                        title = generate_title_from_url(clean_url)
-                    
-                    
-                    product_id = re.search(r'/(\d+)(?:\?|$)', clean_url)
-                    
-                    if price > 0:
-                        return {
-                            'success': True,
-                            'price': price,
-                            'title': title,
-                            'url': clean_url,
-                            'product_id': product_id.group(1) if product_id else re.sub(r'\D', '', clean_url)[-10:] or "yamarket",
-                            'source': 'yamarket'
-                        }
-                    else:
-                        return {'success': False, 'error': 'Цена не найдена или равна 0'}
-                    
-                else:
-                    return {'success': False, 'error': f'Ошибка {response.status}'}
-                
+                html = await response.text()
+
+        # Цену ищем несколькими шаблонами — вёрстка Маркета непостоянна.
+        price = 0
+        for pattern in (
+            r'"price":\s*"?(\d+)"?',
+            r'data-auto="price-value">\s*([\d\s]+)\s*₽',
+            r'"formattedPrice":"([\d\s]+)\s*₽"',
+        ):
+            m = re.search(pattern, html)
+            if m:
+                try:
+                    price = int(m.group(1).replace(" ", ""))
+                    break
+                except (ValueError, AttributeError):
+                    continue
+
+        # Название — тоже несколькими способами, с запасным вариантом из URL.
+        title = ""
+        for pattern in (
+            r'<h1[^>]*data-auto="title"[^>]*>(.*?)</h1>',
+            r'<title[^>]*>(.*?) - Яндекс Маркет</title>',
+            r'<meta[^>]*property="og:title"[^>]*content="([^"]+)"',
+        ):
+            m = re.search(pattern, html)
+            if m:
+                title = re.sub(r"<[^>]+>", "", m.group(1)).strip()
+                if len(title) < 5 or "@" in title or "marketfront" in title:
+                    title = ""
+                break
+        if not title:
+            title = generate_title_from_url(clean_url)
+
+        if price <= 0:
+            logger.info("Цена на странице не найдена")
+            return {"success": False, "error": "Цена не найдена. Маркет мог отдать страницу без цены или капчу."}
+
+        pid = re.search(r"/(\d+)(?:/|$)", clean_url)
+        return {
+            "success": True,
+            "price": price,
+            "title": title,
+            "url": clean_url,
+            "product_id": pid.group(1) if pid else re.sub(r"\D", "", clean_url)[-10:] or "yamarket",
+            "source": "yamarket",
+        }
+
     except Exception as e:
-        logger.info("❌ Ошибка: {e}")
-        return {'success': False, 'error': str(e)}
+        logger.exception("Ошибка парсинга Яндекс.Маркета")
+        return {"success": False, "error": str(e)}
+
 
 def generate_title_from_url(url: str):
-    """Простая генерация названия"""
-    match = re.search(r'/card/([^/]+)/', url)
-    return match.group(1).replace('-', ' ').title() if match else "Товар Яндекс.Маркет"
+    """Запасное название из адреса, если на странице его не нашлось."""
+    match = re.search(r"/card/([^/]+)/", url)
+    return match.group(1).replace("-", " ").title() if match else "Товар Яндекс.Маркет"

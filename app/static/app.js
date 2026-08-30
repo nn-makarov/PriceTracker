@@ -11,7 +11,7 @@ async function searchProducts(query) {
         if (data.results && data.results.length > 0) {
             displayResults(data.results);
         } else {
-            showNotification(data.error || 'Товары не найдены', 'error');
+            showNotification((data.error || 'Товары не найдены') + ' Впишите цену вручную ниже.', 'error');
         }
     } catch (error) {
         console.error('Search error:', error);
@@ -127,6 +127,42 @@ function displayTrackedProducts(products) {
     `).join('');
     
     console.log('✅ Tracked products displayed');
+}
+
+
+// Ручное добавление товара: когда парсер не смог достать цену с Маркета,
+// пользователь смотрит её на сайте и вводит сам. Использует тот же
+// /api/track, что и кнопка автоматического отслеживания.
+async function addManual() {
+    const url = document.getElementById('manualUrl').value.trim();
+    const title = document.getElementById('manualTitle').value.trim();
+    const price = parseFloat(document.getElementById('manualPrice').value);
+
+    if (!url || !title || isNaN(price)) {
+        showNotification('Заполните ссылку, название и цену', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url, title, current_price: price })
+        });
+
+        if (response.ok) {
+            showNotification('Товар добавлен!', 'success');
+            document.getElementById('manualUrl').value = '';
+            document.getElementById('manualTitle').value = '';
+            document.getElementById('manualPrice').value = '';
+            loadTrackedProducts();
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Ошибка добавления', 'error');
+        }
+    } catch (error) {
+        showNotification('Ошибка соединения', 'error');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
