@@ -31,3 +31,7 @@ class PriceHistory(PriceHistoryBase):
 
     class Config:
         from_attributes = True
+
+
+class PriceUpdate(BaseModel):
+    price: float

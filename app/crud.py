@@ -51,3 +51,16 @@ def delete_product(db: Session, product_id: int) -> bool:
     db.delete(product)
     db.commit()
     return True
+
+
+def update_product_price(db: Session, product_id: int, new_price: float):
+    """Обновляет текущую цену товара и дописывает точку в историю.
+    Возвращает товар или None, если товара нет."""
+    product = get_product(db, product_id)
+    if not product:
+        return None
+    product.current_price = new_price
+    db.add(PriceHistory(product_id=product_id, price=new_price))
+    db.commit()
+    db.refresh(product)
+    return product

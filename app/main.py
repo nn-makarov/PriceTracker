@@ -71,6 +71,16 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     logger.info(f"Товар удалён: ID {product_id}")
 
 
+@app.patch("/api/products/{product_id}/price")
+def update_price(product_id: int, payload: schemas.PriceUpdate, db: Session = Depends(get_db)):
+    """Обновить цену товара. Новое значение дописывается в историю цен."""
+    product = crud.update_product_price(db, product_id, payload.price)
+    if not product:
+        raise HTTPException(status_code=404, detail="Товар не найден")
+    logger.info(f"Цена обновлена: ID {product_id} -> {payload.price}")
+    return product
+
+
 @app.get("/api/stats/{product_id}")
 def get_product_stats(product_id: int, db: Session = Depends(get_db)):
     """История и статистика цены по товару."""
