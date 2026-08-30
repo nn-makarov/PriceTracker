@@ -9,6 +9,14 @@ services:
     volumes:
       # База переживает пересборку и перезапуск контейнера.
       - pricetracker_data:/app/data
+    networks:
+      - default
+      - shared
 
 volumes:
   pricetracker_data:
+
+networks:
+  default:
+  shared:
+    external: true
